@@ -1,0 +1,19 @@
+name: Build ETL Runner
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  build:
+    uses: zavestudios/platform-pipelines/.github/workflows/image-build.yml@main
+    with:
+      context: .
+      dockerfile: Dockerfile
+      tags: |
+        ghcr.io/${{ github.repository_owner }}/zavestudios-etl-runner:main
+        ghcr.io/${{ github.repository_owner }}/zavestudios-etl-runner:${{ github.sha }}
+      push: ${{ github.ref == 'refs/heads/main' }}
+      platforms: linux/amd64
