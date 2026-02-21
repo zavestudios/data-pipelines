@@ -66,6 +66,8 @@ services:
       ETL_REJECTS_PATH: /tmp/rejects.ndjson
     volumes:
       - ./data:/app/data:ro
+      - ./etl:/app/etl
+      - ./scripts:/app/scripts
     command:
       - -m
       - etl.jobs.ingest_csv
@@ -99,6 +101,8 @@ services:
       ETL_REJECTS_PATH: /tmp/rejects.ndjson
     volumes:
       - ./data:/app/data:ro
+      - ./etl:/app/etl
+      - ./scripts:/app/scripts
     command:
       - -m
       - etl.jobs.ingest_csv
@@ -130,6 +134,8 @@ services:
       ETL_REJECTS_PATH: /tmp/rejects.ndjson
     volumes:
       - ./data:/app/data:ro
+      - ./etl:/app/etl
+      - ./scripts:/app/scripts
     command:
       - -m
       - etl.jobs.ingest_csv

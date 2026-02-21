@@ -115,6 +115,29 @@ To run:
 - This repo builds the ETL image and DAG logic.
 - GitOps repo owns environment-specific runtime config and promotion.
 
+## DAG Deployment Strategy
+
+This repository supports two DAG delivery models:
+
+1. Baked into image
+- DAGs are copied into the ETL/Airflow image at build time.
+- Rollouts are immutable because code and image tag move together.
+- Best when you want strong promotion control (`k3s` -> `EKS`) with pinned tags.
+
+2. Git-sync (future state)
+- Airflow sidecars pull DAGs from Git at runtime.
+- DAG iteration is faster because you can ship DAG-only changes.
+- Requires stricter branch/tag controls to avoid drift from tested image versions.
+
+Recommended default for this repo:
+- Use baked-image DAGs for production promotion.
+- Reserve Git-sync for rapid development workflows and explicit non-prod use.
+
+Best practices:
+- Keep DAG and ETL code changes in the same PR when behavior is coupled.
+- Promote immutable tags only (avoid mutable `latest`).
+- Treat DAG commits as production code: tests, review, and traceable issue links.
+
 See:
 - `docs/implementation-roadmap.md`
 - `docs/k3s-eks-promotion.md`

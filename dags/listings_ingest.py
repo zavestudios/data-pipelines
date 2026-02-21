@@ -5,7 +5,7 @@ import os
 import pendulum
 from airflow import DAG
 from airflow.operators.bash import BashOperator
-from airflow.providers.cncf.kubernetes.operators.kubernetes_pod import KubernetesPodOperator
+from airflow.providers.cncf.kubernetes.operators.pod import KubernetesPodOperator
 from kubernetes.client import models as k8s
 
 
@@ -69,7 +69,7 @@ with DAG(
             cmds=["python"],
             arguments=_job_args("extract_validate"),
             in_cluster=True,
-            is_delete_operator_pod=True,
+            on_finish_action="delete_pod",
             get_logs=True,
             do_xcom_push=False,
             container_resources=k8s.V1ResourceRequirements(
@@ -86,7 +86,7 @@ with DAG(
             cmds=["python"],
             arguments=_job_args("load_postgres"),
             in_cluster=True,
-            is_delete_operator_pod=True,
+            on_finish_action="delete_pod",
             get_logs=True,
             do_xcom_push=False,
             container_resources=k8s.V1ResourceRequirements(
@@ -103,7 +103,7 @@ with DAG(
             cmds=["python"],
             arguments=_job_args("dq_assertions"),
             in_cluster=True,
-            is_delete_operator_pod=True,
+            on_finish_action="delete_pod",
             get_logs=True,
             do_xcom_push=False,
             container_resources=k8s.V1ResourceRequirements(

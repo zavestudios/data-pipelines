@@ -3,7 +3,7 @@ from __future__ import annotations
 import argparse
 import json
 import logging
-from datetime import date, datetime
+from datetime import date
 
 from etl.config import EtlConfig
 from etl.load.database import assert_rows_for_run_date, ensure_schema, write_listings
@@ -11,11 +11,20 @@ from etl.logging import setup_logging
 from etl.sources.csv import read_listings
 from etl.transform.normalize import normalize_listings
 
+def _parse_run_date(value: str) -> str:
+    try:
+        date.fromisoformat(value)
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError("run-date must be YYYY-MM-DD") from exc
+    return value
 
-def parse_args() -> argparse.Namespace:
+def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Run listings CSV ETL pipeline")
     parser.add_argument("--input", required=True, help="Path to input CSV")
-    parser.add_argument("--run-date", default=date.today().isoformat(), help="Run date (YYYY-MM-DD)")
+    parser.add_argument("--run-date",
+                        default=date.today().isoformat(),
+                        type=_parse_run_date,
+                        help="Run date (YYYY-MM-DD)")
     parser.add_argument("--batch-id", default="", help="Pipeline batch identifier")
     parser.add_argument(
         "--stage",
@@ -23,7 +32,7 @@ def parse_args() -> argparse.Namespace:
         choices=["extract_validate", "load_postgres", "dq_assertions"],
         help="Execution stage for orchestration",
     )
-    return parser.parse_args()
+    return parser.parse_args(argv)
 
 
 def write_rejects(path: str, rejected: list) -> None:
@@ -41,8 +50,6 @@ def main() -> None:
     config = EtlConfig()
     setup_logging(config.etl_log_level)
     logger = logging.getLogger("etl.jobs.ingest_csv")
-
-    datetime.fromisoformat(args.run_date)
 
     raw = read_listings(args.input)
     normalized, rejected = normalize_listings(raw, source_file=args.input, run_date=args.run_date)

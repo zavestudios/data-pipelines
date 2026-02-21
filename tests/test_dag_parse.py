@@ -11,4 +11,5 @@ def test_listings_dag_loads() -> None:
     dag_bag = DagBag(dag_folder=dags_path, include_examples=False)
 
     assert "listings_ingest" in dag_bag.dags
+    assert "hello_k8s" in dag_bag.dags
     assert dag_bag.import_errors == {}
