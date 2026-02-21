@@ -99,6 +99,7 @@ services:
       DB_SSLMODE: disable
       ETL_LOG_LEVEL: INFO
       ETL_REJECTS_PATH: /tmp/rejects.ndjson
+      PYTHONPATH: /app
     volumes:
       - ./data:/app/data:ro
       - ./etl:/app/etl

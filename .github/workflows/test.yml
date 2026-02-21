@@ -15,3 +15,14 @@ jobs:
       use_database: false
       use_redis: false
       constraints_url: "https://raw.githubusercontent.com/apache/airflow/constraints-2.9.3/constraints-3.11.txt"
+
+  verify-idempotency:
+    uses: zavestudios/platform-pipelines/.github/workflows/python-test.yml@859aa9a38b8b4593ed2232e7ecfb6023dd7eb86f
+    with:
+      python_version: "3.11"
+      requirements_file: "requirements.txt"
+      test_command: "python scripts/verify_idempotency.py --input data/listings.csv --run-date 2026-02-11"
+      working_directory: "."
+      use_database: true
+      use_redis: false
+      constraints_url: "https://raw.githubusercontent.com/apache/airflow/constraints-2.9.3/constraints-3.11.txt"
