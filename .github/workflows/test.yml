@@ -1,0 +1,17 @@
+name: Test ETL Pipeline
+
+on:
+  pull_request:
+  merge_group:
+
+jobs:
+  test:
+    uses: zavestudios/platform-pipelines/.github/workflows/python-test.yml@859aa9a38b8b4593ed2232e7ecfb6023dd7eb86f
+    with:
+      python_version: "3.11"
+      requirements_file: "requirements.txt"
+      test_command: "python -m pytest -q"
+      working_directory: "."
+      use_database: false
+      use_redis: false
+      constraints_url: "https://raw.githubusercontent.com/apache/airflow/constraints-2.9.3/constraints-3.11.txt"
