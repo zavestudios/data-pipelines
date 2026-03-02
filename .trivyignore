@@ -1,0 +1,4 @@
+# Temporary exception while constrained by Airflow 2.9.3 constraints
+# (pins h11==0.14.0, which conflicts with patched h11>=0.16.0).
+# Remove when Airflow/provider constraint set is upgraded.
+CVE-2025-43859
