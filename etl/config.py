@@ -14,7 +14,7 @@ class DbConfig(BaseModel):
 
     def sqlalchemy_url(self) -> str:
         return (
-            f"postgresql+psycopg://{self.user}:{self.password}"
+            f"postgresql+psycopg2://{self.user}:{self.password}"
             f"@{self.host}:{self.port}/{self.name}"
             f"?sslmode={self.sslmode}"
         )
