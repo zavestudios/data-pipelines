@@ -3,5 +3,5 @@ apache-airflow-providers-cncf-kubernetes
 sqlalchemy
 pydantic
 pydantic-settings
-psycopg2-binary
+psycopg[binary]
 pytest
