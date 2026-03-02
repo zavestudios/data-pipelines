@@ -43,6 +43,8 @@ data/
 *.parquet
 *.json
 *.sqlite
+!tests/fixtures/
+!tests/fixtures/*.csv
 
 # -------------------------------------------------
 # Environment / secrets
