@@ -19,5 +19,6 @@ jobs:
       dockerfile: Dockerfile
       push: ${{ github.ref == 'refs/heads/main' }}
       platforms: linux/amd64
+      fail_severity: CRITICAL
     secrets:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
