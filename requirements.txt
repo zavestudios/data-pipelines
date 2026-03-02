@@ -5,4 +5,3 @@ pydantic
 pydantic-settings
 psycopg2-binary
 pytest
-h11>=0.16.0
