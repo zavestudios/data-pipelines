@@ -25,7 +25,7 @@ def test_config_builds_sqlalchemy_url(monkeypatch: pytest.MonkeyPatch) -> None:
     config = EtlConfig()
     url = config.db().sqlalchemy_url()
 
-    assert "postgresql+psycopg://" in url
+    assert "postgresql+psycopg2://" in url
     assert "etl_user:secret@localhost:5432/etl?sslmode=prefer" in url
 
 def _set_required_env(monkeypatch: pytest.MonkeyPatch) -> None:

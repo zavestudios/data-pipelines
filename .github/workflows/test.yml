@@ -21,7 +21,7 @@ jobs:
     with:
       python_version: "3.11"
       requirements_file: "requirements.txt"
-      test_command: "python scripts/verify_idempotency.py --input data/listings.csv --run-date 2026-02-11"
+      test_command: "python scripts/verify_idempotency.py --input tests/fixtures/listings.csv --run-date 2026-02-11"
       working_directory: "."
       use_database: true
       use_redis: false

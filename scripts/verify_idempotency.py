@@ -2,9 +2,17 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from datetime import date
+from pathlib import Path
 
 from sqlalchemy import create_engine, delete, func, select
+
+# Allow direct script execution (python scripts/verify_idempotency.py) in CI
+# where sys.path[0] is scripts/ rather than repository root.
+REPO_ROOT = Path(__file__).resolve().parents[1]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
 
 from etl.config import EtlConfig
 from etl.load.database import ensure_schema, listings_table, write_listings

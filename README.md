@@ -2,6 +2,12 @@
 
 This repository contains Airflow DAGs and ETL job code for a Kubernetes-native batch pipeline.
 
+Repository Category: `tenant` (see `platform-docs/_platform/REPO_TAXONOMY.md`)
+
+Documentation authority boundary:
+- This repository documents workload implementation and operations for this tenant.
+- Platform governance, lifecycle, and contract doctrine remain authoritative in `platform-docs/_platform/`.
+
 ## What Runs Here
 
 - DAG: `dags/listings_ingest.py`
