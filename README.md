@@ -28,6 +28,35 @@ Documentation authority boundary:
 - `ETL_LOG_LEVEL` (default: `INFO`)
 - `ETL_REJECTS_PATH` (default: `/tmp/rejects.ndjson`)
 
+## Local Development
+
+### Prerequisites
+
+- Docker and Docker Compose
+- Git
+
+### Quick Start
+
+1. Copy the environment template:
+
+```bash
+cp .env.example .env
+```
+
+2. Start the local Postgres-backed load stage:
+
+```bash
+docker compose up --build etl-load-postgres
+```
+
+3. Start the local Airflow UI when you need DAG inspection:
+
+```bash
+docker compose up --build airflow
+```
+
+Then open `http://localhost:8080`.
+
 ## Local Execution
 
 Run the full load stage:
