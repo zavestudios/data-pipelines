@@ -68,6 +68,16 @@ services:
       - ./data:/app/data:ro
       - ./etl:/app/etl
       - ./scripts:/app/scripts
+    # Security hardening for production-like testing
+    tmpfs:
+      - /tmp
+      - /app/.cache
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    user: "1000:1000"
     command:
       - -m
       - etl.jobs.ingest_csv
@@ -104,6 +114,16 @@ services:
       - ./data:/app/data:ro
       - ./etl:/app/etl
       - ./scripts:/app/scripts
+    # Security hardening for production-like testing
+    tmpfs:
+      - /tmp
+      - /app/.cache
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    user: "1000:1000"
     command:
       - -m
       - etl.jobs.ingest_csv
@@ -137,6 +157,16 @@ services:
       - ./data:/app/data:ro
       - ./etl:/app/etl
       - ./scripts:/app/scripts
+    # Security hardening for production-like testing
+    tmpfs:
+      - /tmp
+      - /app/.cache
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    user: "1000:1000"
     command:
       - -m
       - etl.jobs.ingest_csv

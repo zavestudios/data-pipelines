@@ -10,6 +10,7 @@ permissions:
   contents: read
   packages: write
   id-token: write
+  security-events: write  # For SARIF upload (Grype results)
 
 jobs:
   build:
@@ -20,5 +21,7 @@ jobs:
       push: ${{ github.ref == 'refs/heads/main' }}
       platforms: linux/amd64
       fail_severity: CRITICAL
+      grype_enabled: true  # Enable Grype CVE scanning (cross-validates Trivy)
+      # stig_audit_enabled: true  # TODO: Enable once platform-pipelines supports it
     secrets:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
