@@ -32,7 +32,7 @@ def audit_image(image_ref: str) -> bool:
         ("CIS-4.1", "Minimal file count (distroless baseline)", check_minimal_files),
     ]
 
-    print(f"🔍 STIG Audit: {image_ref}\n")
+    print(f"STIG Audit: {image_ref}\n")
     print("=" * 70)
 
     passed = 0
@@ -41,7 +41,7 @@ def audit_image(image_ref: str) -> bool:
 
     for control_id, check_name, check_func in checks:
         result = check_func(image_ref)
-        status = "✅ PASS" if result else "❌ FAIL"
+        status = "PASS" if result else "FAIL"
         print(f"[{control_id}] {check_name}: {status}")
 
         if result:
@@ -54,12 +54,12 @@ def audit_image(image_ref: str) -> bool:
     print(f"\nResults: {passed} passed, {failed} failed\n")
 
     if failures:
-        print("❌ STIG audit FAILED. The following controls did not pass:")
+        print("STIG audit FAILED. The following controls did not pass:")
         for failure in failures:
             print(f"  - {failure}")
         return False
 
-    print("✅ STIG audit PASSED. All controls satisfied.")
+    print("STIG audit PASSED. All controls satisfied.")
     return True
 
 
@@ -77,13 +77,13 @@ def check_no_shell(image_ref: str) -> bool:
             )
             # If ls succeeds (exit code 0), shell exists - FAIL
             if result.returncode == 0:
-                print(f"  ⚠️  Shell found: {shell}")
+                print(f"  WARNING: Shell found: {shell}")
                 return False
         except subprocess.TimeoutExpired:
-            print(f"  ⚠️  Timeout checking for {shell}")
+            print(f"  WARNING: Timeout checking for {shell}")
             return False
         except Exception as e:
-            print(f"  ⚠️  Error checking {shell}: {e}")
+            print(f"  WARNING: Error checking {shell}: {e}")
             return False
 
     # No shells found - PASS
@@ -104,10 +104,10 @@ def check_no_package_manager(image_ref: str) -> bool:
             )
             # If ls succeeds, package manager exists - FAIL
             if result.returncode == 0:
-                print(f"  ⚠️  Package manager found: {pm}")
+                print(f"  WARNING: Package manager found: {pm}")
                 return False
         except subprocess.TimeoutExpired:
-            print(f"  ⚠️  Timeout checking for {pm}")
+            print(f"  WARNING: Timeout checking for {pm}")
             return False
         except Exception:
             # Expected - package manager not found
@@ -128,14 +128,14 @@ def check_non_root(image_ref: str) -> bool:
         )
 
         if result.returncode != 0:
-            print(f"  ⚠️  Failed to inspect image: {result.stderr}")
+            print(f"  WARNING: Failed to inspect image: {result.stderr}")
             return False
 
         user = result.stdout.strip()
 
         # Empty user means root (UID 0) - FAIL
         if not user:
-            print("  ⚠️  No USER directive - defaults to root")
+            print("  WARNING: No USER directive - defaults to root")
             return False
 
         # Parse UID (handle "1000:1000" or "1000" format)
@@ -145,12 +145,12 @@ def check_non_root(image_ref: str) -> bool:
             uid = int(uid_str)
         except ValueError:
             # Non-numeric user (like "etl") - need to check runtime
-            print(f"  ℹ️  Non-numeric user '{user}' - assuming non-root")
+            print(f"  INFO: Non-numeric user '{user}' - assuming non-root")
             return True
 
         # UID 0 is root - FAIL
         if uid == 0:
-            print(f"  ⚠️  Running as root (UID {uid})")
+            print(f"  WARNING: Running as root (UID {uid})")
             return False
 
         # UID > 999 is non-root - PASS
@@ -158,14 +158,14 @@ def check_non_root(image_ref: str) -> bool:
             return True
 
         # UID 1-999 is system user - WARN but PASS
-        print(f"  ⚠️  Running as system user (UID {uid}), prefer UID > 999")
+        print(f"  WARNING: Running as system user (UID {uid}), prefer UID > 999")
         return True
 
     except subprocess.TimeoutExpired:
-        print("  ⚠️  Timeout inspecting image")
+        print("  WARNING: Timeout inspecting image")
         return False
     except Exception as e:
-        print(f"  ⚠️  Error checking user: {e}")
+        print(f"  WARNING: Error checking user: {e}")
         return False
 
 
@@ -200,7 +200,7 @@ def check_no_setuid(image_ref: str) -> bool:
         # If find command exists and finds setuid/setgid files - FAIL
         if result.returncode == 0 and result.stdout.strip():
             setuid_files = result.stdout.strip().split("\n")
-            print(f"  ⚠️  Found {len(setuid_files)} setuid/setgid binaries:")
+            print(f"  WARNING: Found {len(setuid_files)} setuid/setgid binaries:")
             for f in setuid_files[:5]:  # Show first 5
                 print(f"    - {f}")
             return False
@@ -209,10 +209,10 @@ def check_no_setuid(image_ref: str) -> bool:
         return True
 
     except subprocess.TimeoutExpired:
-        print("  ⚠️  Timeout checking for setuid binaries")
+        print("  WARNING: Timeout checking for setuid binaries")
         return False
     except Exception as e:
-        print(f"  ⚠️  Error checking setuid: {e}")
+        print(f"  WARNING: Error checking setuid: {e}")
         return False
 
 
@@ -229,30 +229,30 @@ def check_minimal_files(image_ref: str) -> bool:
         )
 
         if result.returncode != 0:
-            print(f"  ⚠️  Failed to inspect image: {result.stderr}")
+            print(f"  WARNING: Failed to inspect image: {result.stderr}")
             return False
 
         size_bytes = int(result.stdout.strip())
         size_mb = size_bytes / (1024 * 1024)
 
-        print(f"  ℹ️  Image size: {size_mb:.1f} MB")
+        print(f"  INFO: Image size: {size_mb:.1f} MB")
 
         # Distroless Python images are typically 50-150 MB
         # Full Debian slim images are 200-500 MB
         # Threshold: 250 MB (indicates minimal vs full OS base)
         if size_mb > 250:
-            print(f"  ⚠️  Image size {size_mb:.1f} MB exceeds distroless baseline (> 250 MB)")
-            print(f"  ℹ️  Likely not using distroless base image")
+            print(f"  WARNING: Image size {size_mb:.1f} MB exceeds distroless baseline (> 250 MB)")
+            print(f"  INFO: Likely not using distroless base image")
             return False
 
-        print(f"  ℹ️  Image size indicates minimal/distroless base")
+        print(f"  INFO: Image size indicates minimal/distroless base")
         return True
 
     except subprocess.TimeoutExpired:
-        print("  ⚠️  Timeout checking image size")
+        print("  WARNING: Timeout checking image size")
         return False
     except Exception as e:
-        print(f"  ⚠️  Error checking file count: {e}")
+        print(f"  WARNING: Error checking file count: {e}")
         return False
 
 
@@ -278,7 +278,7 @@ def main() -> int:
             check=True,
         )
     except (subprocess.CalledProcessError, FileNotFoundError, subprocess.TimeoutExpired):
-        print("❌ Error: docker command not found or not running", file=sys.stderr)
+        print("Error: docker command not found or not running", file=sys.stderr)
         return 2
 
     # Check if image exists locally
@@ -290,7 +290,7 @@ def main() -> int:
         )
         if result.returncode != 0:
             # Image not found locally, try to pull
-            print(f"📥 Pulling image: {image_ref}\n")
+            print(f"Pulling image: {image_ref}\n")
             subprocess.run(
                 ["docker", "pull", image_ref],
                 capture_output=True,
@@ -298,12 +298,12 @@ def main() -> int:
                 check=True,
             )
         else:
-            print(f"✅ Using local image: {image_ref}\n")
+            print(f"Using local image: {image_ref}\n")
     except subprocess.CalledProcessError as e:
-        print(f"❌ Error: Failed to pull image: {e.stderr.decode()}", file=sys.stderr)
+        print(f"Error: Failed to pull image: {e.stderr.decode()}", file=sys.stderr)
         return 2
     except subprocess.TimeoutExpired:
-        print("❌ Error: Timeout pulling image", file=sys.stderr)
+        print("Error: Timeout pulling image", file=sys.stderr)
         return 2
 
     # Run audit
