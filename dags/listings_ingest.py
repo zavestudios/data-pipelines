@@ -14,6 +14,35 @@ ETL_IMAGE = os.getenv("ETL_IMAGE", "zavestudios/etl-runner:0.1.0")
 INPUT_PATH = os.getenv("ETL_INPUT_PATH", "/data/listings.csv")
 EXECUTION_BACKEND = os.getenv("ETL_EXECUTION_BACKEND", "kubernetes")
 
+# Service account name for IRSA (if using AWS Secrets Manager fallback)
+SERVICE_ACCOUNT = os.getenv("AIRFLOW_SERVICE_ACCOUNT", "data-pipelines")
+
+# Security context for hardened pods (STIG-aligned)
+SECURITY_CONTEXT = k8s.V1PodSecurityContext(
+    run_as_user=1000,
+    run_as_group=1000,
+    fs_group=1000,
+    run_as_non_root=True,
+)
+
+CONTAINER_SECURITY_CONTEXT = k8s.V1SecurityContext(
+    run_as_non_root=True,
+    allow_privilege_escalation=False,
+    read_only_root_filesystem=True,
+    capabilities=k8s.V1Capabilities(drop=["ALL"]),
+)
+
+# Writable volume mounts for read-only filesystem
+VOLUME_MOUNTS = [
+    k8s.V1VolumeMount(name="tmp", mount_path="/tmp"),
+    k8s.V1VolumeMount(name="cache", mount_path="/app/.cache"),
+]
+
+VOLUMES = [
+    k8s.V1Volume(name="tmp", empty_dir=k8s.V1EmptyDirVolumeSource()),
+    k8s.V1Volume(name="cache", empty_dir=k8s.V1EmptyDirVolumeSource()),
+]
+
 
 def _job_args(stage: str) -> list[str]:
     return [
@@ -68,6 +97,11 @@ with DAG(
             image=ETL_IMAGE,
             cmds=["python"],
             arguments=_job_args("extract_validate"),
+            service_account_name=SERVICE_ACCOUNT,
+            security_context=SECURITY_CONTEXT,
+            container_security_context=CONTAINER_SECURITY_CONTEXT,
+            volume_mounts=VOLUME_MOUNTS,
+            volumes=VOLUMES,
             in_cluster=True,
             on_finish_action="delete_pod",
             get_logs=True,
@@ -85,6 +119,11 @@ with DAG(
             image=ETL_IMAGE,
             cmds=["python"],
             arguments=_job_args("load_postgres"),
+            service_account_name=SERVICE_ACCOUNT,
+            security_context=SECURITY_CONTEXT,
+            container_security_context=CONTAINER_SECURITY_CONTEXT,
+            volume_mounts=VOLUME_MOUNTS,
+            volumes=VOLUMES,
             in_cluster=True,
             on_finish_action="delete_pod",
             get_logs=True,
@@ -102,6 +141,11 @@ with DAG(
             image=ETL_IMAGE,
             cmds=["python"],
             arguments=_job_args("dq_assertions"),
+            service_account_name=SERVICE_ACCOUNT,
+            security_context=SECURITY_CONTEXT,
+            container_security_context=CONTAINER_SECURITY_CONTEXT,
+            volume_mounts=VOLUME_MOUNTS,
+            volumes=VOLUMES,
             in_cluster=True,
             on_finish_action="delete_pod",
             get_logs=True,
