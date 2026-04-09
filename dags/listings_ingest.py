@@ -44,6 +44,21 @@ VOLUMES = [
 ]
 
 
+def _secret_env_vars() -> list[k8s.V1EnvVar]:
+    """Build env vars from K8s Secret (ESO-sourced from Vault)"""
+    secret_name = "data-pipelines-db"
+    keys = ["DB_HOST", "DB_PORT", "DB_NAME", "DB_USER", "DB_PASSWORD", "DB_SSLMODE"]
+    return [
+        k8s.V1EnvVar(
+            name=key,
+            value_from=k8s.V1EnvVarSource(
+                secret_key_ref=k8s.V1SecretKeySelector(name=secret_name, key=key)
+            ),
+        )
+        for key in keys
+    ]
+
+
 def _job_args(stage: str) -> list[str]:
     return [
         "-m",
@@ -102,6 +117,7 @@ with DAG(
             container_security_context=CONTAINER_SECURITY_CONTEXT,
             volume_mounts=VOLUME_MOUNTS,
             volumes=VOLUMES,
+            env_vars=_secret_env_vars(),
             in_cluster=True,
             on_finish_action="delete_pod",
             get_logs=True,
@@ -124,6 +140,7 @@ with DAG(
             container_security_context=CONTAINER_SECURITY_CONTEXT,
             volume_mounts=VOLUME_MOUNTS,
             volumes=VOLUMES,
+            env_vars=_secret_env_vars(),
             in_cluster=True,
             on_finish_action="delete_pod",
             get_logs=True,
@@ -146,6 +163,7 @@ with DAG(
             container_security_context=CONTAINER_SECURITY_CONTEXT,
             volume_mounts=VOLUME_MOUNTS,
             volumes=VOLUMES,
+            env_vars=_secret_env_vars(),
             in_cluster=True,
             on_finish_action="delete_pod",
             get_logs=True,
