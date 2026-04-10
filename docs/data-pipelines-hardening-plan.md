@@ -1,8 +1,8 @@
-# Production Hardening Plan: `data-pipelines`
+# Production Hardening Plan: `listings-ingest`
 
 ## Objective
 
-Harden `data-pipelines` for production deployment by:
+Harden `listings-ingest` for production deployment by:
 
 - reducing container attack surface
 - enforcing non-root, read-only runtime defaults
@@ -13,7 +13,7 @@ Harden `data-pipelines` for production deployment by:
 
 Based on [`REPO_TAXONOMY.md`](/Users/xavierlopez/Dev/platform-docs/_platform/REPO_TAXONOMY.md):
 
-- `data-pipelines` is a `tenant` repository
+- `listings-ingest` is a `tenant` repository
 - `gitops` is an `infrastructure` repository
 - `platform-pipelines` is a `platform-service` repository
 
@@ -84,11 +84,11 @@ Target checks:
 
 Schedule: Week 1, Days 1-3
 
-Repository: `data-pipelines`
+Repository: `listings-ingest`
 
 File:
 
-- `/Users/xavierlopez/Dev/data-pipelines/Dockerfile`
+- `/Users/xavierlopez/Dev/listings-ingest/Dockerfile`
 
 Planned changes:
 
@@ -123,7 +123,7 @@ ENTRYPOINT ["python"]
 
 Also update:
 
-- `/Users/xavierlopez/Dev/data-pipelines/docker-compose.yml`
+- `/Users/xavierlopez/Dev/listings-ingest/docker-compose.yml`
 
 Recommended local runtime settings:
 
@@ -150,11 +150,11 @@ Validation:
 
 Schedule: Week 1, Days 3-4
 
-Repository: `data-pipelines`
+Repository: `listings-ingest`
 
 File:
 
-- `/Users/xavierlopez/Dev/data-pipelines/dags/listings_ingest.py`
+- `/Users/xavierlopez/Dev/listings-ingest/dags/listings_ingest.py`
 
 Planned changes:
 
@@ -202,7 +202,7 @@ Validation:
 
 Schedule: Week 1, Day 5 through Week 2, Day 2
 
-Repository: `data-pipelines`
+Repository: `listings-ingest`
 
 Prerequisite:
 
@@ -210,14 +210,14 @@ Prerequisite:
 
 File:
 
-- `/Users/xavierlopez/Dev/data-pipelines/dags/listings_ingest.py`
+- `/Users/xavierlopez/Dev/listings-ingest/dags/listings_ingest.py`
 
 Planned changes:
 
 ```python
 def _secret_env_vars() -> list[k8s.V1EnvVar]:
     """Build env vars from K8s Secret sourced by External Secrets Operator."""
-    secret_name = "data-pipelines-db"
+    secret_name = "listings-ingest-db"
     keys = ["DB_HOST", "DB_PORT", "DB_NAME", "DB_USER", "DB_PASSWORD", "DB_SSLMODE"]
     return [
         k8s.V1EnvVar(
@@ -245,8 +245,8 @@ extract_validate = KubernetesPodOperator(
 
 Validation:
 
-1. Requires cluster access: `kubectl get externalsecret -n data-pipelines`
-2. Requires cluster access: `kubectl get secret data-pipelines-db -n data-pipelines -o yaml`
+1. Requires cluster access: `kubectl get externalsecret -n listings-ingest`
+2. Requires cluster access: `kubectl get secret listings-ingest-db -n listings-ingest -o yaml`
 3. Trigger a DAG run and verify database connectivity
 
 ### Phase 4: CI/CD Scanning Enhancements
@@ -283,11 +283,11 @@ Add:
 
 #### 4.2 Custom audit script
 
-Repository: `data-pipelines` or `platform-pipelines`
+Repository: `listings-ingest` or `platform-pipelines`
 
 Suggested file:
 
-- `/Users/xavierlopez/Dev/data-pipelines/scripts/stig_audit.py`
+- `/Users/xavierlopez/Dev/listings-ingest/scripts/stig_audit.py`
 
 Suggested checks:
 
@@ -309,11 +309,11 @@ def audit_image(image_ref: str) -> bool:
 
 #### 4.3 Consumer workflow update
 
-Repository: `data-pipelines`
+Repository: `listings-ingest`
 
 File:
 
-- `/Users/xavierlopez/Dev/data-pipelines/.github/workflows/build.yml`
+- `/Users/xavierlopez/Dev/listings-ingest/.github/workflows/build.yml`
 
 Planned changes:
 
@@ -345,83 +345,83 @@ Schedule: Week 2, Days 1-3
 
 Repository: `gitops`
 
-These manifests belong in `gitops`, not `data-pipelines`.
+These manifests belong in `gitops`, not `listings-ingest`.
 
 #### 5.1 Namespace
 
 Path:
 
-- `/Users/xavierlopez/Dev/gitops/tenants/data-pipelines/namespace.yaml`
+- `/Users/xavierlopez/Dev/gitops/tenants/listings-ingest/namespace.yaml`
 
 ```yaml
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: data-pipelines
+  name: listings-ingest
   labels:
-    zave.io/workload: data-pipelines
+    zave.io/workload: listings-ingest
 ```
 
 #### 5.2 ServiceAccount
 
 Path:
 
-- `/Users/xavierlopez/Dev/gitops/tenants/data-pipelines/serviceaccount.yaml`
+- `/Users/xavierlopez/Dev/gitops/tenants/listings-ingest/serviceaccount.yaml`
 
 ```yaml
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: data-pipelines
-  namespace: data-pipelines
+  name: listings-ingest
+  namespace: listings-ingest
   annotations:
-    eks.amazonaws.com/role-arn: arn:aws:iam::ACCOUNT_ID:role/data-pipelines-secrets-reader
+    eks.amazonaws.com/role-arn: arn:aws:iam::ACCOUNT_ID:role/listings-ingest-secrets-reader
 ```
 
 #### 5.3 ExternalSecret
 
 Path:
 
-- `/Users/xavierlopez/Dev/gitops/tenants/data-pipelines/data-pipelines-db.external-secret.yaml`
+- `/Users/xavierlopez/Dev/gitops/tenants/listings-ingest/listings-ingest-db.external-secret.yaml`
 
 ```yaml
 apiVersion: external-secrets.io/v1beta1
 kind: ExternalSecret
 metadata:
-  name: data-pipelines-db
-  namespace: data-pipelines
+  name: listings-ingest-db
+  namespace: listings-ingest
 spec:
   refreshInterval: 1h
   secretStoreRef:
     kind: ClusterSecretStore
     name: vault-kv
   target:
-    name: data-pipelines-db
+    name: listings-ingest-db
     creationPolicy: Owner
   data:
     - secretKey: DB_HOST
       remoteRef:
-        key: tenants/data-pipelines/db
+        key: tenants/listings-ingest/db
         property: DB_HOST
     - secretKey: DB_PORT
       remoteRef:
-        key: tenants/data-pipelines/db
+        key: tenants/listings-ingest/db
         property: DB_PORT
     - secretKey: DB_NAME
       remoteRef:
-        key: tenants/data-pipelines/db
+        key: tenants/listings-ingest/db
         property: DB_NAME
     - secretKey: DB_USER
       remoteRef:
-        key: tenants/data-pipelines/db
+        key: tenants/listings-ingest/db
         property: DB_USER
     - secretKey: DB_PASSWORD
       remoteRef:
-        key: tenants/data-pipelines/db
+        key: tenants/listings-ingest/db
         property: DB_PASSWORD
     - secretKey: DB_SSLMODE
       remoteRef:
-        key: tenants/data-pipelines/db
+        key: tenants/listings-ingest/db
         property: DB_SSLMODE
 ```
 
@@ -429,7 +429,7 @@ spec:
 
 Path:
 
-- `/Users/xavierlopez/Dev/gitops/tenants/data-pipelines/kustomization.yaml`
+- `/Users/xavierlopez/Dev/gitops/tenants/listings-ingest/kustomization.yaml`
 
 ```yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
@@ -437,16 +437,16 @@ kind: Kustomization
 resources:
   - namespace.yaml
   - serviceaccount.yaml
-  - data-pipelines-db.external-secret.yaml
+  - listings-ingest-db.external-secret.yaml
 ```
 
 #### 5.5 Argo CD Application
 
 Path:
 
-- `/Users/xavierlopez/Dev/gitops/platform/argocd/applications/data-pipelines.yaml`
+- `/Users/xavierlopez/Dev/gitops/platform/argocd/applications/listings-ingest.yaml`
 
-Use the standard Argo CD tenant-application pattern from [`GITOPS_MODEL.md`](/Users/xavierlopez/Dev/platform-docs/_platform/GITOPS_MODEL.md), pointing `spec.source.path` to `tenants/data-pipelines`.
+Use the standard Argo CD tenant-application pattern from [`GITOPS_MODEL.md`](/Users/xavierlopez/Dev/platform-docs/_platform/GITOPS_MODEL.md), pointing `spec.source.path` to `tenants/listings-ingest`.
 
 ## Implementation Sequence
 
@@ -468,7 +468,7 @@ Use the standard Argo CD tenant-application pattern from [`GITOPS_MODEL.md`](/Us
 
 1. Create the STIG audit script.
 2. Propose `platform-pipelines` workflow changes.
-3. Enable the new scanners in `data-pipelines`.
+3. Enable the new scanners in `listings-ingest`.
 4. Push branch and verify CI passes.
 
 ### Week 2: GitOps and Integration
@@ -483,11 +483,11 @@ Use the standard Argo CD tenant-application pattern from [`GITOPS_MODEL.md`](/Us
 #### Day 8
 
 1. Update `listings_ingest.py` to read DB credentials from the Kubernetes Secret.
-2. Commit `data-pipelines` changes.
+2. Commit `listings-ingest` changes.
 
 #### Day 9
 
-1. Merge `data-pipelines` PR and build the hardened image.
+1. Merge `listings-ingest` PR and build the hardened image.
 2. Update GitOps to reference the new image.
 3. Trigger the Airflow DAG.
 4. Validate hardened pod startup, secret injection, ETL completion, and filesystem behavior.
@@ -514,8 +514,8 @@ Use the standard Argo CD tenant-application pattern from [`GITOPS_MODEL.md`](/Us
 
 ### Secrets
 
-- Requires cluster access: `kubectl get externalsecret -n data-pipelines`
-- Requires cluster access: `kubectl get secret data-pipelines-db -n data-pipelines -o yaml`
+- Requires cluster access: `kubectl get externalsecret -n listings-ingest`
+- Requires cluster access: `kubectl get secret listings-ingest-db -n listings-ingest -o yaml`
 - Requires cluster access: `kubectl exec -n airflow <pod> -- env | grep DB_`
 
 ### Security
@@ -530,7 +530,7 @@ These steps require human or cluster-side action and are not repo-only changes:
 
 - Requires cluster access: deploy or reconcile the GitOps manifests
 - Requires cluster access: confirm External Secrets Operator is authorized to read the tenant secret path
-- Requires cluster access: populate Vault at `tenants/data-pipelines/db`
+- Requires cluster access: populate Vault at `tenants/listings-ingest/db`
 - Requires cluster access: validate runtime behavior in k3s or EKS
 - create IAM role wiring if IRSA is used
 

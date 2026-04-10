@@ -15,7 +15,7 @@ INPUT_PATH = os.getenv("ETL_INPUT_PATH", "/data/listings.csv")
 EXECUTION_BACKEND = os.getenv("ETL_EXECUTION_BACKEND", "kubernetes")
 
 # Service account name for IRSA (if using AWS Secrets Manager fallback)
-SERVICE_ACCOUNT = os.getenv("AIRFLOW_SERVICE_ACCOUNT", "data-pipelines")
+SERVICE_ACCOUNT = os.getenv("AIRFLOW_SERVICE_ACCOUNT", "listings-ingest")
 
 # Security context for hardened pods (STIG-aligned)
 SECURITY_CONTEXT = k8s.V1PodSecurityContext(
@@ -46,7 +46,7 @@ VOLUMES = [
 
 def _secret_env_vars() -> list[k8s.V1EnvVar]:
     """Build env vars from K8s Secret (ESO-sourced from Vault)"""
-    secret_name = "data-pipelines-db"
+    secret_name = "listings-ingest-db"
     keys = ["DB_HOST", "DB_PORT", "DB_NAME", "DB_USER", "DB_PASSWORD", "DB_SSLMODE"]
     return [
         k8s.V1EnvVar(

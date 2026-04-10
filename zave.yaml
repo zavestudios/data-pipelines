@@ -1,7 +1,7 @@
 apiVersion: zave.io/v1
 kind: Workload
 metadata:
-  name: data-pipelines
+  name: listings-ingest
 spec:
   runtime: container
   exposure: none
