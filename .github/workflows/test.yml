@@ -4,6 +4,9 @@ on:
   pull_request:
   merge_group:
 
+permissions:
+  contents: read
+
 jobs:
   test:
     uses: zavestudios/platform-pipelines/.github/workflows/python-test.yml@859aa9a38b8b4593ed2232e7ecfb6023dd7eb86f
